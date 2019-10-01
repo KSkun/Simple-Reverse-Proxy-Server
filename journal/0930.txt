@@ -1,5 +1,0 @@
-2019/9/30 Day 0
-在GitHub上创建了项目的repo。
-学习了一些简单的Kotlin语法。
-配置了gradle项目。
-初始化项目为一个Kotlin写的Hello, World!项目。
