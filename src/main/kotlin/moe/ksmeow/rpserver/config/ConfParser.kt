@@ -72,7 +72,7 @@ open class ConfParser(_path: String) {
     open fun parseToken(line: String, num: Int): ConfToken<*>? {
         val scan = StringScanner(line)
         val name = scan.next() ?: return null
-        if (name == "#") return null
+        if (name.startsWith('#')) return null
         if (name == "}") return ConfBlockEnd()
         var str1 = scan.next() ?: throw ConfigInvalidException("A format error is occurred on Line $num")
 

@@ -12,17 +12,7 @@ class HTTPServer(_conf: ConfSet) {
     fun init() {
         val server = HttpServer.create(InetSocketAddress(conf.getToken("listen")!!.first().value as Int), 0)
         val context = server.createContext("/")
-        context.handler = HTTPHandler()
+        if (conf.getToken("location")!!.isEmpty()) context.handler = DefaultHandler()
         server.start()
-    }
-
-    class HTTPHandler : HttpHandler {
-        override fun handle(exchange: HttpExchange?) {
-            val response = "Hello, World!"
-            exchange!!.sendResponseHeaders(200, response.toByteArray().size.toLong())
-            val os = exchange.responseBody
-            os.write(response.toByteArray())
-            os.close()
-        }
     }
 }
