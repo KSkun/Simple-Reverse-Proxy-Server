@@ -34,3 +34,7 @@ jar {
         attributes "Main-Class": "moe.ksmeow.rpserver.RPServer"
     }
 }
+
+run {
+    workingDir = new File('testdir')
+}
