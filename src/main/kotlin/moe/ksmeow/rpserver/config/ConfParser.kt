@@ -25,8 +25,7 @@ open class ConfParser(_path: String) {
         var location: ConfLocation? = null
 
         while (str != null) {
-            val res = parseToken(str, num)
-            when (res) {
+            when (val res = parseToken(str, num)) {
                 null -> {}
                 is ConfLocation -> {
                     if(server == null || location != null)

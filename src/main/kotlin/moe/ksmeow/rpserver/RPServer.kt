@@ -4,7 +4,7 @@ import moe.ksmeow.rpserver.config.RPSConfig
 
 class RPServer {
     companion object {
-        val VERSION = "1.0"
+        const val VERSION = "1.0"
 
         @JvmStatic
         fun main(args: Array<String>) {
