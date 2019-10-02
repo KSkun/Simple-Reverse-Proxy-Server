@@ -21,7 +21,7 @@ open class ConfParser(_path: String) {
         var num = 1 // counter of line number
 
         val main = ConfList("main")
-        var server: ConfList? = null
+        var server: ConfSet? = null
         var location: ConfLocation? = null
 
         while (str != null) {
@@ -32,7 +32,7 @@ open class ConfParser(_path: String) {
                         throw ConfigInvalidException("A format error is occurred on Line $num")
                     location = res
                 }
-                is ConfList -> {
+                is ConfSet -> {
                     if(server != null)
                         throw ConfigInvalidException("A format error is occurred on Line $num")
                     server = res
@@ -109,7 +109,7 @@ open class ConfParser(_path: String) {
                 return if (str2 != "{") ConfLocation(str2, str1) else ConfLocation(str1, null)
             }
             "server" -> {
-                return ConfList("server")
+                return ConfSet("server")
             }
         }
 
