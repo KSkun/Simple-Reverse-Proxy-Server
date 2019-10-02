@@ -1,0 +1,13 @@
+package moe.ksmeow.rpserver.config
+
+import java.lang.NullPointerException
+
+open class ConfList(_name: String, _tokens: ArrayList<ConfToken<*>> = ArrayList()) :
+    ConfToken<ArrayList<ConfToken<*>>>(_name, _tokens) {
+
+    open fun getTokenList() = value
+    open fun addToken(token: ConfToken<*>) {
+        if (value == null) throw NullPointerException()
+        value.add(token)
+    }
+}

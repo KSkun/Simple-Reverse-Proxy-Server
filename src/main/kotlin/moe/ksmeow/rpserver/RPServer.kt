@@ -5,13 +5,15 @@ import moe.ksmeow.rpserver.config.RPSConfig
 class RPServer {
     companion object {
         val VERSION = "1.0"
-    }
 
-    fun main() {
-        // TODO: Logger
-        println("Simple Reverse Proxy Server $VERSION is running.")
-        println("Parsing config file...")
-        RPSConfig.INSTANCE.init()
+        @JvmStatic
+        fun main(args: Array<String>) {
+            // TODO: Logger
+            println("Simple Reverse Proxy Server $VERSION is running.")
+            println("Parsing config file...")
+            println(System.getProperty("user.dir"))
+            RPSConfig.INSTANCE.init()
+            println(RPSConfig.INSTANCE.getConfig().getTokenList())
+        }
     }
-
 }

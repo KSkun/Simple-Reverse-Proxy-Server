@@ -26,10 +26,10 @@ compileTestKotlin {
     kotlinOptions.jvmTarget = "1.8"
 }
 
-mainClassName = 'moe.ksmeow.rpserver.RPServerKt'
+mainClassName = 'moe.ksmeow.rpserver.RPServer'
 
 jar {
     manifest {
-        attributes "Main-Class": "moe.ksmeow.rpserver.RPServerKt"
+        attributes "Main-Class": "moe.ksmeow.rpserver.RPServer"
     }
 }
