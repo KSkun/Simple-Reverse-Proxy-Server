@@ -12,8 +12,8 @@ import java.util.logging.SimpleFormatter
 class HTTPServer(_conf: ConfSet) {
     private val conf = _conf
 
-    private var errorLog: Logger = Logger.getLogger(this::class.toString())
-    private var accessLog: Logger = Logger.getLogger(this::class.toString())
+    private var errorLog: Logger = Logger.getLogger(this::class.toString() + "#error")
+    private var accessLog: Logger = Logger.getLogger(this::class.toString() + "#access")
 
     fun init() {
         FileUtils.createNewFile(File(conf.getToken("error_log")!!.first().value as String))
@@ -27,7 +27,8 @@ class HTTPServer(_conf: ConfSet) {
 
         val server = HttpServer.create(InetSocketAddress(conf.getToken("listen")!!.first().value as Int), 0)
         val context = server.createContext("/")
-        if (conf.getToken("location")!!.isEmpty()) context.handler = DefaultHandler(errorLog, accessLog)
+        if (conf.getToken("location")!!.isEmpty()) context.handler = DefaultHandler(conf, errorLog, accessLog)
+        else context.handler = ConditionedHandler(conf, errorLog, accessLog)
         server.start()
     }
 }
