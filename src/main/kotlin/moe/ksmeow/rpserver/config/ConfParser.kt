@@ -1,5 +1,6 @@
 package moe.ksmeow.rpserver.config
 
+import moe.ksmeow.rpserver.RPServer
 import moe.ksmeow.rpserver.util.FileUtils
 import java.io.BufferedReader
 import java.io.File
@@ -110,6 +111,9 @@ open class ConfParser(_path: String) {
             }
             "server" -> {
                 return ConfSet("server")
+            }
+            "echo" -> {
+                return ConfToken("echo", str1.substring(1, str1.length - 2))
             }
         }
 

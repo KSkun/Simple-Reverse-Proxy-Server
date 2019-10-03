@@ -12,23 +12,33 @@ class ConditionedHandler(_conf: ConfSet, _errorLog: Logger, _accessLog: Logger) 
     RequestHandler(_conf, _errorLog, _accessLog) {
 
     override fun handle(exchange: HttpExchange) {
-        log(exchange)
         for (conflt in conf.getToken("location")!!) {
             val confl = conflt as ConfLocation
             if (confl.match(exchange.requestURI)) {
+                // echo token
+                for (t in confl.getToken("echo")!!) {
+                    RPServer.log.info(t.value as String)
+                }
+
                 if (confl.value!!.get("proxy_pass").isNotEmpty()) handleReverse(exchange, confl)
                 else handleStatic(exchange, confl)
                 return
             }
         }
-        // TODO: Error log.
-        exchange.sendResponseHeaders(500, 0)
+        errorResponse(exchange, 500)
+        log(exchange, true)
     }
 
     private fun handleReverse(exchange: HttpExchange, location: ConfLocation) {
         val urlConnection = getHttpConnection(exchange, location)
         urlConnection.connect()
-        val response = urlConnection.inputStream
+
+        // exception handle
+        if (urlConnection.responseCode / 100 > 3) {
+            errorResponse(exchange, urlConnection.responseCode)
+            log(exchange, true)
+            return
+        }
 
         // set headers
         for (h in urlConnection.headerFields.entries) {
@@ -37,6 +47,7 @@ class ConditionedHandler(_conf: ConfSet, _errorLog: Logger, _accessLog: Logger) 
         }
 
         // set body
+        val response = urlConnection.inputStream
         val bytes = response.readBytes()
         exchange.sendResponseHeaders(urlConnection.responseCode, bytes.size.toLong())
         val os = exchange.responseBody
@@ -44,6 +55,7 @@ class ConditionedHandler(_conf: ConfSet, _errorLog: Logger, _accessLog: Logger) 
         os.close()
 
         exchange.close()
+        log(exchange)
     }
 
     private fun handleStatic(exchange: HttpExchange, location: ConfLocation) {

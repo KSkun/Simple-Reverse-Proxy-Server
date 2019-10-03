@@ -9,9 +9,12 @@ open class ConfLocation(_rule: String, _option: String?, _tokens: HashMultimap<S
     val option = _option
 
     open fun match(url: URI): Boolean {
-        when (option) {
-            null -> return url.toString().indexOf(rule) == 0
-            else -> return false // TODO: Other rules.
+        return when (option) {
+            null, "^~" -> url.toString().indexOf(rule) == 0
+            "=" -> url.toString() == rule
+            "~" -> url.toString().matches(Regex(rule))
+            "~*" -> url.toString().toLowerCase().matches(Regex(rule.toLowerCase()))
+            else -> throw ConfigInvalidException("No such location option $option.")
         }
     }
 }
