@@ -15,7 +15,7 @@ open class ConfParser(_path: String) {
 
     open fun parse(): ConfList {
         val confFile = File(path)
-        if (!confFile.exists()) FileUtils.copy(defaultPath, confFile)
+        if (!confFile.exists()) FileUtils.copyFromJar(defaultPath, confFile)
         val reader = BufferedReader(InputStreamReader(FileInputStream(confFile)))
         var str = reader.readLine()
         var num = 1 // counter of line number
