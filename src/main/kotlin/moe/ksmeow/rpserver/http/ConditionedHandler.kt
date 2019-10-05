@@ -45,13 +45,11 @@ class ConditionedHandler(_conf: ConfSet, _errorLog: Logger, _accessLog: Logger) 
             if (h.key == null) continue
             exchange.responseHeaders.add(h.key, h.value.first())
         }
+        exchange.sendResponseHeaders(urlConnection.responseCode, 0)
 
         // set body
-        val response = urlConnection.inputStream
-        val bytes = response.readBytes()
-        exchange.sendResponseHeaders(urlConnection.responseCode, bytes.size.toLong())
         val os = exchange.responseBody
-        os.write(bytes)
+        os.write(urlConnection.inputStream.readBytes())
         os.close()
 
         exchange.close()
@@ -77,6 +75,7 @@ class ConditionedHandler(_conf: ConfSet, _errorLog: Logger, _accessLog: Logger) 
             val name = (t.value as Pair<*, *>).first as String
             var value = t.value.second as String
             if (value == "\$host") value = exchange.requestHeaders.getFirst("Host")
+            if (value == "\$proxy_host") value = (location.value.get("proxy_pass").first().value as String).removePrefix("http://")
             urlConnection.setRequestProperty(name, value)
         }
         return urlConnection

@@ -12,8 +12,8 @@ open class ConfLocation(_rule: String, _option: String?, _tokens: HashMultimap<S
         return when (option) {
             null, "^~" -> url.toString().indexOf(rule) == 0
             "=" -> url.toString() == rule
-            "~" -> url.toString().matches(Regex(rule))
-            "~*" -> url.toString().toLowerCase().matches(Regex(rule.toLowerCase()))
+            "~" -> Regex(rule).find(url.toString()) != null
+            "~*" -> Regex(rule.toLowerCase()).find(url.toString().toLowerCase()) != null
             else -> throw ConfigInvalidException("No such location option $option.")
         }
     }
