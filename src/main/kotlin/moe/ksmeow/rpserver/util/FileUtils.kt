@@ -1,7 +1,6 @@
 package moe.ksmeow.rpserver.util
 
 import java.io.File
-import java.lang.Exception
 import java.nio.file.Files
 
 class FileUtils {

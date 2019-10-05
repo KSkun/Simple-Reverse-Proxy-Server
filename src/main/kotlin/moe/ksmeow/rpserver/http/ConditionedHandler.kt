@@ -3,25 +3,24 @@ package moe.ksmeow.rpserver.http
 import com.sun.net.httpserver.HttpExchange
 import moe.ksmeow.rpserver.RPServer
 import moe.ksmeow.rpserver.config.ConfLocation
-import moe.ksmeow.rpserver.config.ConfSet
+import moe.ksmeow.rpserver.config.ConfServer
 import java.net.HttpURLConnection
 import java.net.URL
 import java.util.logging.Logger
 
-class ConditionedHandler(_conf: ConfSet, _errorLog: Logger, _accessLog: Logger) :
+class ConditionedHandler(_conf: ConfServer, _errorLog: Logger, _accessLog: Logger) :
     RequestHandler(_conf, _errorLog, _accessLog) {
 
     override fun handle(exchange: HttpExchange) {
-        for (conflt in conf.getToken("location")!!) {
-            val confl = conflt as ConfLocation
-            if (confl.match(exchange.requestURI)) {
+        for (location in conf.locations) {
+            if (location.match(exchange.requestURI)) {
                 // echo token
-                for (t in confl.getToken("echo")!!) {
+                for (t in location.getToken("echo")!!) {
                     RPServer.log.info(t.value as String)
                 }
 
-                if (confl.value!!.get("proxy_pass").isNotEmpty()) handleReverse(exchange, confl)
-                else handleStatic(exchange, confl)
+                if (location.value!!.get("proxy_pass") != null) handleReverse(exchange, location)
+                else handleStatic(exchange, location)
                 return
             }
         }

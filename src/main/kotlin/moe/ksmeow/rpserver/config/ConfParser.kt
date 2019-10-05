@@ -1,6 +1,5 @@
 package moe.ksmeow.rpserver.config
 
-import moe.ksmeow.rpserver.RPServer
 import moe.ksmeow.rpserver.util.FileUtils
 import java.io.BufferedReader
 import java.io.File
@@ -8,13 +7,14 @@ import java.io.FileInputStream
 import java.io.InputStreamReader
 import java.lang.NullPointerException
 
-open class ConfParser(_path: String) {
+class ConfParser(_path: String) {
     private val path = _path
     private val defaultPath = "/rps.conf"
 
-    open fun getPath(): String = path
+    fun getPath(): String = path
 
-    open fun parse(): ConfList {
+    // hard-coded dirty implementation
+    fun parse(): ConfList {
         val confFile = File(path)
         if (!confFile.exists()) FileUtils.copyFromJar(defaultPath, confFile)
         val reader = BufferedReader(InputStreamReader(FileInputStream(confFile)))
@@ -22,7 +22,7 @@ open class ConfParser(_path: String) {
         var num = 1 // counter of line number
 
         val main = ConfList("main")
-        var server: ConfSet? = null
+        var server: ConfServer? = null
         var location: ConfLocation? = null
 
         while (str != null) {
@@ -33,7 +33,7 @@ open class ConfParser(_path: String) {
                         throw ConfigInvalidException("A format error is occurred on Line $num")
                     location = res
                 }
-                is ConfSet -> {
+                is ConfServer -> {
                     if(server != null)
                         throw ConfigInvalidException("A format error is occurred on Line $num")
                     server = res
@@ -42,10 +42,11 @@ open class ConfParser(_path: String) {
                     when {
                         location != null -> {
                             if (server == null) throw NullPointerException()
-                            server.addToken(location)
+                            server.addLocation(location)
                             location = null
                         }
                         server != null -> {
+                            server.sortLocation()
                             main.addToken(server)
                             server = null
                         }
@@ -70,7 +71,7 @@ open class ConfParser(_path: String) {
         return main
     }
 
-    open fun parseToken(line: String, num: Int): ConfToken<*>? {
+    fun parseToken(line: String, num: Int): ConfToken<*>? {
         val scan = StringScanner(line)
         val name = scan.next() ?: return null
         if (name.startsWith('#')) return null
@@ -106,11 +107,12 @@ open class ConfParser(_path: String) {
                 return ConfToken(name, Pair(str1, str2.substring(0, str2.length - 1)))
             }
             "location" -> {
-                val str2 = scan.next() ?: throw ConfigInvalidException("A format error is occurred on Line $num")
+                var str2 = scan.next() ?: throw ConfigInvalidException("A format error is occurred on Line $num")
+                if (str1 == "/") str2 = str1
                 return if (str2 != "{") ConfLocation(str2, str1) else ConfLocation(str1, null)
             }
             "server" -> {
-                return ConfSet("server")
+                return ConfServer()
             }
             "echo" -> {
                 return ConfToken("echo", str1.substring(1, str1.length - 2))

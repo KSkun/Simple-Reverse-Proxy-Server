@@ -2,16 +2,16 @@ package moe.ksmeow.rpserver.config
 
 import java.lang.NullPointerException
 
-open class RPSConfig {
+class RPSConfig {
     private val confPath = "rps.conf"
     private var main: ConfList? = null
 
-    open fun getConfig(): ConfList {
+    fun getConfig(): ConfList {
         if (main == null) throw NullPointerException()
         return main!!
     }
 
-    open fun init() {
+    fun init() {
         val parser = ConfParser(confPath)
         main = parser.parse()
     }

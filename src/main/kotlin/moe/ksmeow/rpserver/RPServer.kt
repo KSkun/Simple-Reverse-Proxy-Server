@@ -1,6 +1,6 @@
 package moe.ksmeow.rpserver
 
-import moe.ksmeow.rpserver.config.ConfSet
+import moe.ksmeow.rpserver.config.ConfServer
 import moe.ksmeow.rpserver.config.RPSConfig
 import moe.ksmeow.rpserver.http.HTTPServer
 import java.util.logging.Logger
@@ -29,7 +29,7 @@ class RPServer {
 
             System.setProperty("sun.net.http.allowRestrictedHeaders", "true"); // release restriction
             for (servert in conf.getConfig().value!!) {
-                val server = servert as ConfSet
+                val server = servert as ConfServer
                 val httpServer = HTTPServer(server)
                 log.info("HTTP Server starting at " + server.value!!.get("server_name").first().value
                         + ":" + server.value.get("listen").first().value + "...")

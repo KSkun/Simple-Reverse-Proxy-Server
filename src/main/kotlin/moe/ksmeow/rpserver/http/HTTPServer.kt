@@ -1,7 +1,7 @@
 package moe.ksmeow.rpserver.http
 
 import com.sun.net.httpserver.HttpServer
-import moe.ksmeow.rpserver.config.ConfSet
+import moe.ksmeow.rpserver.config.ConfServer
 import moe.ksmeow.rpserver.util.FileUtils
 import java.io.File
 import java.net.InetSocketAddress
@@ -9,7 +9,7 @@ import java.util.logging.FileHandler
 import java.util.logging.Logger
 import java.util.logging.SimpleFormatter
 
-class HTTPServer(_conf: ConfSet) {
+class HTTPServer(_conf: ConfServer) {
     private val conf = _conf
 
     private var errorLog: Logger = Logger.getLogger(this::class.toString() + "#error")
@@ -27,7 +27,7 @@ class HTTPServer(_conf: ConfSet) {
 
         val server = HttpServer.create(InetSocketAddress(conf.getToken("listen")!!.first().value as Int), 0)
         val context = server.createContext("/")
-        if (conf.getToken("location")!!.isEmpty()) context.handler = DefaultHandler(conf, errorLog, accessLog)
+        if (conf.locations.isEmpty()) context.handler = DefaultHandler(conf, errorLog, accessLog)
         else context.handler = ConditionedHandler(conf, errorLog, accessLog)
         server.start()
     }

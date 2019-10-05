@@ -1,11 +1,10 @@
 package moe.ksmeow.rpserver.http
 
 import com.sun.net.httpserver.HttpExchange
-import com.sun.net.httpserver.HttpHandler
-import moe.ksmeow.rpserver.config.ConfSet
+import moe.ksmeow.rpserver.config.ConfServer
 import java.util.logging.Logger
 
-class DefaultHandler(_conf: ConfSet, _errorLog: Logger, _accessLog: Logger) :
+class DefaultHandler(_conf: ConfServer, _errorLog: Logger, _accessLog: Logger) :
     RequestHandler(_conf, _errorLog, _accessLog) {
 
     private val response = "<html><head><title>Welcome to SRPS!</title></head>" +

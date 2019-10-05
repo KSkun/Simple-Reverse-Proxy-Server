@@ -2,10 +2,10 @@ package moe.ksmeow.rpserver.http
 
 import com.sun.net.httpserver.HttpExchange
 import com.sun.net.httpserver.HttpHandler
-import moe.ksmeow.rpserver.config.ConfSet
+import moe.ksmeow.rpserver.config.ConfServer
 import java.util.logging.Logger
 
-abstract class RequestHandler(_conf: ConfSet, _errorLog: Logger, _accessLog: Logger) : HttpHandler {
+abstract class RequestHandler(_conf: ConfServer, _errorLog: Logger, _accessLog: Logger) : HttpHandler {
     protected val conf = _conf
     protected val errorLog = _errorLog
     protected val accessLog = _accessLog
