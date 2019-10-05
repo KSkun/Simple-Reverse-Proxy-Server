@@ -4,9 +4,14 @@ import com.sun.net.httpserver.HttpExchange
 import moe.ksmeow.rpserver.RPServer
 import moe.ksmeow.rpserver.config.ConfLocation
 import moe.ksmeow.rpserver.config.ConfServer
+import org.apache.tika.Tika
+import java.io.ByteArrayOutputStream
+import java.io.File
+import java.io.FileInputStream
 import java.net.HttpURLConnection
 import java.net.URL
 import java.util.logging.Logger
+import java.util.zip.GZIPOutputStream
 
 class ConditionedHandler(_conf: ConfServer, _errorLog: Logger, _accessLog: Logger) :
     RequestHandler(_conf, _errorLog, _accessLog) {
@@ -19,7 +24,7 @@ class ConditionedHandler(_conf: ConfServer, _errorLog: Logger, _accessLog: Logge
                     RPServer.log.info(t.value as String)
                 }
 
-                if (location.value!!.get("proxy_pass") != null) handleReverse(exchange, location)
+                if (location.value!!.get("proxy_pass").isNotEmpty()) handleReverse(exchange, location)
                 else handleStatic(exchange, location)
                 return
             }
@@ -56,7 +61,52 @@ class ConditionedHandler(_conf: ConfServer, _errorLog: Logger, _accessLog: Logge
     }
 
     private fun handleStatic(exchange: HttpExchange, location: ConfLocation) {
-        // TODO: Static proxy.
+        val root = location.getToken("root")!!.first().value as String
+        var file = File(root + exchange.requestURI)
+        if (exchange.requestURI.toString() == "/") {
+            var flag = false
+            for (value in location.getToken("index")!!.first().value!! as ArrayList<*>) {
+                val index = File(root + "/" + value as String)
+                if (index.exists()) {
+                    flag = true
+                    file = index
+                    break
+                }
+            }
+            if (!flag) {
+                errorResponse(exchange, 404)
+                log(exchange, true)
+                return
+            }
+        }
+        if (!file.exists()) {
+            errorResponse(exchange, 404)
+            log(exchange, true)
+            return
+        }
+
+        exchange.responseHeaders.add("Content-Encoding", "gzip")
+        exchange.responseHeaders.add("Content-Type", Tika().detect(file))
+        exchange.responseHeaders.add("Server", "SRPS 1.0")
+
+
+        // set body
+        val os = exchange.responseBody
+        val fis = FileInputStream(file)
+        val fbytes = fis.readBytes()
+        fis.close()
+        val bao = ByteArrayOutputStream()
+        val gis = GZIPOutputStream(bao) // GZIP compress
+        gis.write(fbytes)
+        gis.close()
+        val gbytes = bao.toByteArray()
+        bao.close()
+        exchange.sendResponseHeaders(200, gbytes.size.toLong())
+        os.write(gbytes)
+        os.close()
+
+        exchange.close()
+        log(exchange)
     }
 
     private fun getHttpConnection(exchange: HttpExchange, location: ConfLocation): HttpURLConnection {
