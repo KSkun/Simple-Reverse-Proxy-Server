@@ -79,16 +79,22 @@ class ConditionedHandler(_conf: ConfServer, _errorLog: Logger, _accessLog: Logge
                 return
             }
         }
+
+        // remove parameters
+        val index = exchange.requestURI.toString().indexOf('?')
+        if (index != -1) file = File(root + exchange.requestURI.toString().substring(0, index))
+
+        // not found error
         if (!file.exists()) {
             errorResponse(exchange, 404)
             log(exchange, true)
             return
         }
 
+        // set headers
         exchange.responseHeaders.add("Content-Encoding", "gzip")
         exchange.responseHeaders.add("Content-Type", Tika().detect(file))
         exchange.responseHeaders.add("Server", "SRPS 1.0")
-
 
         // set body
         val os = exchange.responseBody
