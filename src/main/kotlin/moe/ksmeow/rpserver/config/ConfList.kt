@@ -8,6 +8,6 @@ class ConfList(_name: String, _tokens: ArrayList<ConfToken<*>> = ArrayList()) :
     fun getTokenList() = value
     fun addToken(token: ConfToken<*>) {
         if (value == null) throw NullPointerException()
-        value.add(token)
+        value!!.add(token)
     }
 }

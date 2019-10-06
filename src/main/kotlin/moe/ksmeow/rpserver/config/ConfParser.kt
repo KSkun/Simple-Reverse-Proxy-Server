@@ -5,11 +5,12 @@ import java.io.BufferedReader
 import java.io.File
 import java.io.FileInputStream
 import java.io.InputStreamReader
-import java.lang.NullPointerException
 
 class ConfParser(_path: String) {
     private val path = _path
     private val defaultPath = "/rps.conf"
+    private var num = 1 // counter of line number
+    private var str: String? = null
 
     fun getPath(): String = path
 
@@ -18,60 +19,25 @@ class ConfParser(_path: String) {
         val confFile = File(path)
         if (!confFile.exists()) FileUtils.copyFromJar(defaultPath, confFile)
         val reader = BufferedReader(InputStreamReader(FileInputStream(confFile)))
-        var str = reader.readLine()
-        var num = 1 // counter of line number
+        str = reader.readLine()
 
         val main = ConfList("main")
-        var server: ConfServer? = null
-        var location: ConfLocation? = null
 
         while (str != null) {
-            when (val res = parseToken(str, num)) {
+            when (parseToken(str!!, num)) {
                 null -> {}
-                is ConfLocation -> {
-                    if(server == null || location != null)
-                        throw ConfigInvalidException("A format error is occurred on Line $num")
-                    location = res
-                }
-                is ConfServer -> {
-                    if(server != null)
-                        throw ConfigInvalidException("A format error is occurred on Line $num")
-                    server = res
-                }
-                is ConfBlockEnd -> {
-                    when {
-                        location != null -> {
-                            if (server == null) throw NullPointerException()
-                            server.addLocation(location)
-                            location = null
-                        }
-                        server != null -> {
-                            server.sortLocation()
-                            main.addToken(server)
-                            server = null
-                        }
-                        else -> throw ConfigInvalidException("A format error is occurred on Line $num")
-                    }
-                }
-                else -> {
-                    when {
-                        location != null -> {
-                            if (server == null) throw NullPointerException()
-                            location.addToken(res)
-                        }
-                        server != null -> server.addToken(res)
-                        else -> throw ConfigInvalidException("A format error is occurred on Line $num")
-                    }
-                }
+                is ConfServer -> main.addToken(parseServer(reader))
+                is ConfUpstream -> main.addToken(parseUpstream(reader))
             }
 
             str = reader.readLine()
             num++
         }
+
         return main
     }
 
-    fun parseToken(line: String, num: Int): ConfToken<*>? {
+    private fun parseToken(line: String, num: Int): ConfToken<*>? {
         val scan = StringScanner(line)
         val name = scan.next() ?: return null
         if (name.startsWith('#')) return null
@@ -111,14 +77,95 @@ class ConfParser(_path: String) {
                 if (str1 == "/") str2 = str1
                 return if (str2 != "{") ConfLocation(str2, str1) else ConfLocation(str1, null)
             }
-            "server" -> {
-                return ConfServer()
-            }
-            "echo" -> {
-                return ConfToken("echo", str1.substring(1, str1.length - 2))
-            }
+            "server" -> return ConfServer()
+            "upstream" -> return ConfUpstream()
+            "echo" -> return ConfToken("echo", str1.substring(1, str1.length - 2))
         }
 
         throw ConfigInvalidException("Unknown Token on Line $num")
+    }
+
+    private fun parseServer(reader: BufferedReader): ConfServer {
+        str = reader.readLine()
+        num++
+
+        var location: ConfLocation? = null
+        val server = ConfServer()
+
+        while (str != null) {
+            when (val res = parseToken(str!!, num)) {
+                null -> {}
+                is ConfLocation -> {
+                    if(location != null)
+                        throw ConfigInvalidException("A format error is occurred on Line $num")
+                    location = res
+                }
+                is ConfBlockEnd -> {
+                    when {
+                        location != null -> {
+                            server.addLocation(location)
+                            location = null
+                        }
+                        else -> {
+                            server.sortLocation()
+                            return server
+                        }
+                    }
+                }
+                else -> {
+                    when {
+                        location != null -> {
+                            location.addToken(res)
+                        }
+                        else -> {
+                            server.addToken(res)
+                        }
+                    }
+                }
+            }
+
+            str = reader.readLine()
+            num++
+        }
+
+        throw ConfigInvalidException("Unexpected end of file.")
+    }
+
+    // because of server token has the same name with the above one, here deal with it separatedly.
+    private fun parseUpstream(reader: BufferedReader): ConfUpstream {
+        str = reader.readLine()
+        num++
+
+        val upstream = ConfUpstream()
+
+        while (str != null) {
+            val scan = StringScanner(str!!)
+            when (scan.next()) {
+                null -> {}
+                "server" -> {
+                    var url = scan.next()
+                    if (url!!.endsWith(';')) url = url.substring(0, url.length - 1)
+                    val server = ConfUpstreamServer(url)
+                    var str2 = scan.next()
+                    while (str2 != null) {
+                        if (str2!!.endsWith(';')) str2 = str2.substring(0, str2.length - 1)
+                        val index = str2.indexOf('=')
+                        if (index == -1) server.options[str2] = null
+                        else server.options[str2.substring(0, index)] = str2.substring(index + 1, str2.length)
+                        str2 = scan.next()
+                    }
+                    upstream.servers.add(server)
+                }
+                "least_conn;" -> upstream.value = ConfUpstreamType.LEAST_CONN
+                "ip_hash;" -> upstream.value = ConfUpstreamType.IP_HASH
+                "}" -> return upstream
+                else -> throw ConfigInvalidException("Unknown token $str.")
+            }
+
+            str = reader.readLine()
+            num++
+        }
+
+        throw ConfigInvalidException("Unexpected end of file.")
     }
 }

@@ -126,11 +126,11 @@ class ConditionedHandler(_conf: ConfServer, _errorLog: Logger, _accessLog: Logge
         for (h in exchange.requestHeaders) {
             urlConnection.setRequestProperty(h.key, h.value.first())
         }
-        for (t in location.value.get("proxy_set_header")) {
+        for (t in location.value!!.get("proxy_set_header")) {
             val name = (t.value as Pair<*, *>).first as String
-            var value = t.value.second as String
+            var value = (t.value as Pair<*, *>).second as String
             if (value == "\$host") value = exchange.requestHeaders.getFirst("Host")
-            if (value == "\$proxy_host") value = (location.value.get("proxy_pass").first().value as String).removePrefix("http://")
+            if (value == "\$proxy_host") value = (location.value!!.get("proxy_pass").first().value as String).removePrefix("http://")
             urlConnection.setRequestProperty(name, value)
         }
         return urlConnection

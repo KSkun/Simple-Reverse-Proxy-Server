@@ -12,7 +12,6 @@ import java.util.logging.Logger
 class RPServer {
     companion object {
         const val VERSION = "1.0"
-        const val DEBUG = true
         const val TIMEOUT = 10000
 
         val log: Logger = Logger.getLogger(this::class.toString())
@@ -32,7 +31,7 @@ class RPServer {
                 val server = servert as ConfServer
                 val httpServer = HTTPServer(server)
                 log.info("HTTP Server starting at " + server.value!!.get("server_name").first().value
-                        + ":" + server.value.get("listen").first().value + "...")
+                        + ":" + server.value!!.get("listen").first().value + "...")
                 httpServer.init()
                 servers.add(httpServer)
             }

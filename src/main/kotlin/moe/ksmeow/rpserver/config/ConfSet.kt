@@ -9,10 +9,10 @@ open class ConfSet(_name: String, _tokens: HashMultimap<String, ConfToken<*>> = 
     fun getTokenList() = value?.entries()
     fun addToken(token: ConfToken<*>) {
         if (value == null) throw NullPointerException()
-        value.put(token.name, token)
+        value!!.put(token.name, token)
     }
     fun getToken(name: String): MutableSet<ConfToken<*>>? {
         if (value == null) throw NullPointerException()
-        return value.get(name)
+        return value!!.get(name)
     }
 }
