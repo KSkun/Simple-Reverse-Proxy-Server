@@ -154,7 +154,7 @@ class ConfParser(_path: String) {
                     }
                     upstream.servers.add(server)
                 }
-                "least_conn;" -> upstream.value = ConfUpstreamType.LEAST_CONN
+                // "least_conn;" -> upstream.value = ConfUpstreamType.LEAST_CONN
                 "ip_hash;" -> upstream.value = ConfUpstreamType.IP_HASH
                 "}" -> return upstream
                 else -> throw ConfigInvalidException("Unknown token $str.")
