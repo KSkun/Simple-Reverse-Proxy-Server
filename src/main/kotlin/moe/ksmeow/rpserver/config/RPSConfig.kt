@@ -4,9 +4,9 @@ import java.lang.NullPointerException
 
 class RPSConfig {
     private val confPath = "rps.conf"
-    private var main: ConfList? = null
+    private var main: ConfMain? = null
 
-    fun getConfig(): ConfList {
+    fun getConfig(): ConfMain {
         if (main == null) throw NullPointerException()
         return main!!
     }

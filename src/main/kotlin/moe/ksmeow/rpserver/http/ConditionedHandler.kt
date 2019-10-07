@@ -121,7 +121,13 @@ class ConditionedHandler(_conf: ConfServer, _errorLog: Logger, _accessLog: Logge
     }
 
     private fun getHttpConnection(exchange: HttpExchange, location: ConfLocation): HttpURLConnection {
-        val url = URL(location.value!!.get("proxy_pass").first().value as String + exchange.requestURI)
+        var host = location.value!!.get("proxy_pass").first().value as String
+
+        if (RPServer.conf.getConfig().upstreams.containsKey(host.substring(7, host.length))) {
+            host = "http://" + getServer(host.substring(7, host.length))
+        }
+
+        val url = URL(host + exchange.requestURI)
         val urlConnection: HttpURLConnection = url.openConnection() as HttpURLConnection
 
         urlConnection.connectTimeout = RPServer.TIMEOUT
@@ -139,5 +145,10 @@ class ConditionedHandler(_conf: ConfServer, _errorLog: Logger, _accessLog: Logge
             urlConnection.setRequestProperty(name, value)
         }
         return urlConnection
+    }
+
+    private fun getServer(name: String): String {
+        val upstream = RPServer.conf.getConfig().upstreams[name]
+        return upstream!!.next()
     }
 }

@@ -13,19 +13,19 @@ class ConfParser(_path: String) {
     private var str: String? = null
 
     // hard-coded dirty implementation
-    fun parse(): ConfList {
+    fun parse(): ConfMain {
         val confFile = File(path)
         if (!confFile.exists()) FileUtils.copyFromJar(defaultPath, confFile)
         val reader = BufferedReader(InputStreamReader(FileInputStream(confFile)))
         str = reader.readLine()
 
-        val main = ConfList("main")
+        val main = ConfMain()
 
         while (str != null) {
-            when (parseToken(str!!, num)) {
+            when (val res = parseToken(str!!, num)) {
                 null -> {}
                 is ConfServer -> main.addToken(parseServer(reader))
-                is ConfUpstream -> main.addToken(parseUpstream(reader))
+                is ConfUpstream -> main.upstreams[res.upstreamName] = parseUpstream(reader, res.upstreamName)
             }
 
             str = reader.readLine()
@@ -76,7 +76,7 @@ class ConfParser(_path: String) {
                 return if (str2 != "{") ConfLocation(str2, str1) else ConfLocation(str1, null)
             }
             "server" -> return ConfServer()
-            "upstream" -> return ConfUpstream()
+            "upstream" -> return ConfUpstream(str1)
             "echo" -> return ConfToken("echo", str1.substring(1, str1.length - 2))
         }
 
@@ -130,11 +130,11 @@ class ConfParser(_path: String) {
     }
 
     // because of server token has the same name with the above one, here deal with it separatedly.
-    private fun parseUpstream(reader: BufferedReader): ConfUpstream {
+    private fun parseUpstream(reader: BufferedReader, name: String): ConfUpstream {
         str = reader.readLine()
         num++
 
-        val upstream = ConfUpstream()
+        val upstream = ConfUpstream(name)
 
         while (str != null) {
             val scan = StringScanner(str!!)
