@@ -12,7 +12,7 @@ import java.util.logging.Logger
 class RPServer {
     companion object {
         const val VERSION = "1.0"
-        const val TIMEOUT = 10000
+        const val TIMEOUT = 10000 // default: 10s
 
         val log: Logger = Logger.getLogger(this::class.toString())
         val conf: RPSConfig = RPSConfig()
@@ -26,7 +26,7 @@ class RPServer {
             conf.init()
             log.info("Config file loaded.")
 
-            System.setProperty("sun.net.http.allowRestrictedHeaders", "true"); // release restriction
+            System.setProperty("sun.net.http.allowRestrictedHeaders", "true") // release restriction
             for (servert in conf.getConfig().value!!) {
                 val server = servert as ConfServer
                 val httpServer = HTTPServer(server)

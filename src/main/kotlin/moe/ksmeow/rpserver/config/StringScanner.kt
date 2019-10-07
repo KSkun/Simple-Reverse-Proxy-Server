@@ -6,8 +6,6 @@ class StringScanner(_str: String) {
     private val str = _str
     private var idx = 0
 
-    fun getString() = str
-
     fun next(): String? {
         if (idx >= str.length) return null
         var lst = idx

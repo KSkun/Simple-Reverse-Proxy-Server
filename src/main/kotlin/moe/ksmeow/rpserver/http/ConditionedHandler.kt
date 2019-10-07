@@ -4,14 +4,13 @@ import com.sun.net.httpserver.HttpExchange
 import moe.ksmeow.rpserver.RPServer
 import moe.ksmeow.rpserver.config.ConfLocation
 import moe.ksmeow.rpserver.config.ConfServer
+import moe.ksmeow.rpserver.util.CompressUtils
 import org.apache.tika.Tika
-import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileInputStream
 import java.net.HttpURLConnection
 import java.net.URL
 import java.util.logging.Logger
-import java.util.zip.GZIPOutputStream
 
 class ConditionedHandler(_conf: ConfServer, _errorLog: Logger, _accessLog: Logger) :
     RequestHandler(_conf, _errorLog, _accessLog) {
@@ -92,23 +91,29 @@ class ConditionedHandler(_conf: ConfServer, _errorLog: Logger, _accessLog: Logge
         }
 
         // set headers
-        exchange.responseHeaders.add("Content-Encoding", "gzip")
         exchange.responseHeaders.add("Content-Type", Tika().detect(file))
         exchange.responseHeaders.add("Server", "SRPS 1.0")
 
         // set body
         val os = exchange.responseBody
         val fis = FileInputStream(file)
-        val fbytes = fis.readBytes()
+        var bytes = fis.readBytes()
         fis.close()
-        val bao = ByteArrayOutputStream()
-        val gis = GZIPOutputStream(bao) // GZIP compress
-        gis.write(fbytes)
-        gis.close()
-        val gbytes = bao.toByteArray()
-        bao.close()
-        exchange.sendResponseHeaders(200, gbytes.size.toLong())
-        os.write(gbytes)
+
+        val acceptEncodingList = exchange.requestHeaders["Accept-Encoding"]
+        if (acceptEncodingList!!.isNotEmpty()) {
+            val acceptEncoding = acceptEncodingList.first()
+            if (acceptEncoding.indexOf("gzip") != -1) {
+                exchange.responseHeaders.add("Content-Encoding", "gzip")
+                bytes = CompressUtils.gzip(bytes)
+            } else if (acceptEncoding.indexOf("deflate") != -1) {
+                exchange.responseHeaders.add("Content-Encoding", "deflate")
+                bytes = CompressUtils.deflate(bytes)
+            }
+        }
+
+        exchange.sendResponseHeaders(200, bytes.size.toLong())
+        os.write(bytes)
         os.close()
 
         exchange.close()

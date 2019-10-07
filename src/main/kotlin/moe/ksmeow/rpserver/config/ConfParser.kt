@@ -12,8 +12,6 @@ class ConfParser(_path: String) {
     private var num = 1 // counter of line number
     private var str: String? = null
 
-    fun getPath(): String = path
-
     // hard-coded dirty implementation
     fun parse(): ConfList {
         val confFile = File(path)
@@ -148,7 +146,7 @@ class ConfParser(_path: String) {
                     val server = ConfUpstreamServer(url)
                     var str2 = scan.next()
                     while (str2 != null) {
-                        if (str2!!.endsWith(';')) str2 = str2.substring(0, str2.length - 1)
+                        if (str2.endsWith(';')) str2 = str2.substring(0, str2.length - 1)
                         val index = str2.indexOf('=')
                         if (index == -1) server.options[str2] = null
                         else server.options[str2.substring(0, index)] = str2.substring(index + 1, str2.length)
