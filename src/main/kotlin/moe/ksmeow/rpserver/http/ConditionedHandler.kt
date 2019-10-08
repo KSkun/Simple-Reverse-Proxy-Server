@@ -124,7 +124,7 @@ class ConditionedHandler(_conf: ConfServer, _errorLog: Logger, _accessLog: Logge
         var host = location.value!!.get("proxy_pass").first().value as String
 
         if (RPServer.conf.getConfig().upstreams.containsKey(host.substring(7, host.length))) {
-            host = "http://" + getServer(host.substring(7, host.length), exchange.remoteAddress.hostName)
+            host = "http://" + getServer(host.substring(7, host.length), exchange.remoteAddress.hostString)
         }
 
         val url = URL(host + exchange.requestURI)

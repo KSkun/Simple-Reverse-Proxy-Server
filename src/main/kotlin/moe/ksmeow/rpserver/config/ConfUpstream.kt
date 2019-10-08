@@ -1,6 +1,5 @@
 package moe.ksmeow.rpserver.config
 
-import java.util.*
 import kotlin.collections.ArrayList
 import kotlin.collections.HashMap
 
@@ -13,7 +12,7 @@ class ConfUpstream(_name: String, _type: ConfUpstreamType = ConfUpstreamType.DEF
     private var next = 0
     private var count = 0
     private val ips = HashMap<String, Int>()
-    private val serverHeap = PriorityQueue<Pair<Int, Int>>()
+    private val ipCount = HashMap<Int, Int>()
 
     fun next(ip: String): String {
         return when (value) {
@@ -36,18 +35,19 @@ class ConfUpstream(_name: String, _type: ConfUpstreamType = ConfUpstreamType.DEF
     }
 
     private fun nextIpHash(ip: String): String {
-        if (serverHeap.isEmpty()) {
-            for (i in 0 until servers.size) {
-                serverHeap.add(Pair(0, i))
-            }
-        }
         return if (!ips.containsKey(ip)) {
-            val server = serverHeap.poll()
-            ips[ip] = server.second
-            serverHeap.add(Pair(server.first + 1, server.second))
+            var server = 0
+            for (i in 0 until servers.size) {
+                if (!ipCount.containsKey(i)) ipCount[i] = 0
+                if (ipCount[i]!! < ipCount[server]!!) server = i
+            }
+            ips[ip] = server
+            ipCount[server] = ipCount[server]!! + 1
             servers[ips[ip]!!].value!!
         } else {
             servers[ips[ip]!!].value!!
         }
     }
+
+
 }
